@@ -1,6 +1,11 @@
+#!/usr/bin/env python3
+
+import sys
 import re
 import functools
-import sys
+import itertools
+from pprint import pprint
+from copy import deepcopy
 
 def day1():
     numbers = list(map(lambda x: int(x), open('1.txt').read().strip().split('\n')))
@@ -169,4 +174,48 @@ def day10():
             last3 = i
     print(sol)
 
-day10()
+def day11():
+    originalSeats = [list(x) for x in open('11.txt').read().strip().split('\n')]
+    rows = len(originalSeats)
+    cols = len(originalSeats[0])
+
+    # Part 1
+    def neighboursOccupied(row, col, seats):
+        neighbours = set(itertools.chain(itertools.product([row - 1, row + 1], range(col - 1, col + 2)), itertools.product(range(row - 1, row + 2), [col - 1, col + 1])))
+        return len(list(filter(lambda x: x == '#', [seats[x][y] if x >= 0 and y >= 0 and x < rows and y < cols else 'O' for x, y in neighbours])))
+
+    seatscopy = []
+    seats = deepcopy(originalSeats)
+    while seats != seatscopy:
+        seatscopy = deepcopy(seats)
+        seats = [[ '.' if seatscopy[row][col] == '.' else 'L' if neighboursOccupied(row, col, seatscopy) >= 4 else '#' if neighboursOccupied(row, col, seatscopy) == 0 else seatscopy[row][col] for col in range(cols)] for row in range(rows)]
+
+    print(len(list(filter(lambda x: x == '#', [seats[r][c] for r, c in itertools.product(range(rows), range(cols))]))))
+
+    # Part 2
+    def neighboursOccupied2(row, col, seats):
+        res = 0
+        directions = itertools.product(range(-1, 2), range(-1, 2))
+        for dirX, dirY in directions:
+            x, y = dirX, dirY
+            if x == 0 and y == 0: continue
+            while row + x >= 0 and col + y >= 0 and row + x < rows and col + y < cols:
+                if seats[row + x][col + y] == '#':
+                    res += 1
+                    break
+                if seats[row + x][col + y] == 'L': break
+                x += dirX
+                y += dirY
+        return res
+
+    seatscopy = []
+    seats = deepcopy(originalSeats)
+    while seats != seatscopy:
+        seatscopy = deepcopy(seats)
+        seats = [[ '.' if seatscopy[row][col] == '.' else 'L' if neighboursOccupied2(row, col, seatscopy) >= 5 else '#' if neighboursOccupied2(row, col, seatscopy) == 0 else seatscopy[row][col] for col in range(cols)] for row in range(rows)]
+
+    print(len(list(filter(lambda x: x == '#', [seats[r][c] for r, c in itertools.product(range(rows), range(cols))]))))
+
+day11()
+
+
