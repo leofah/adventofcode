@@ -128,9 +128,23 @@ def day9():
     numbers = [int(x) for x in open('9.txt').read().strip().split('\n')]
     incorrect = list(filter(lambda x: x[1] not in [a + b[1] for b in enumerate(numbers[x[0]:x[0] + 25]) for a in numbers[x[0] + b[0]: x[0] + 25]], enumerate(numbers[25:])))[0][1]
     print(incorrect)
-    # this is in O(n^3). However it can be solved in linear time: if the current sum is to hight, remove old values, if it is to low, add new values until the sum is equal to 'incorrect'
+
+    # this is in O(n^3). But the range is found in one line of code.
     rang = list(filter(lambda x: sum(numbers[x[0]:x[1]]) == incorrect, [[a,b] for a in range(len(numbers)) for b in range(a, len(numbers))]))[0]
     print(min(numbers[rang[0]:rang[1]]) + max(numbers[rang[0]:rang[1]]))
+
+    # this is in linear time and solves the problem as well
+    summ = 0
+    start, end = 0, 0
+    while summ != incorrect:
+        if summ < incorrect:
+            summ += numbers[end]
+            end += 1
+        else:
+            summ -= numbers[start]
+            start += 1
+
+    print(min(numbers[start:end]) + max(numbers[start:end]))
 
 def day10():
     adapters = [0] + sorted([int(x) for x in open('10.txt').read().strip().split('\n')])
