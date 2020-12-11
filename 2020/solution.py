@@ -43,10 +43,10 @@ def day4():
             pid = re.search('pid:([0-9]*)', passport).groups()[0]
             
             correct = True
-            correct &= byr >= 1920 and byr <= 2002
-            correct &= iyr >= 2010 and iyr <= 2020
-            correct &= eyr >= 2020 and eyr <= 2030
-            correct &= (hgtcm >= 150 and hgtcm <= 193) or (hgtin >= 59 and hgtin <= 76)
+            correct &= 1920 <= byr <= 2002
+            correct &= 2010 <= iyr <= 2020
+            correct &= 2020 <= eyr <= 2030
+            correct &= 150 <= hgtcm <= 193 or 59 <= hgtin <= 76
             correct &= len(hcl) == 6
             correct &= len(pid) == 9
             return correct
@@ -62,12 +62,12 @@ def day5():
     print(list(filter(lambda x: x + 1 not in seats and x + 2 in seats, seats))[0] + 1)
 
 def day6():
-    groups = open("6.txt").read().strip().split('\n\n')
+    groups = open('6.txt').read().strip().split('\n\n')
     print(sum([len({a for a in x.replace('\n','')}) for x in groups]))
     print(sum(list(len(functools.reduce(lambda x, y: x.intersection(y), [{a for a in line} for line in x.split('\n')], set(map(chr, range(97,123))))) for x in groups)))
     
 def day7():
-    rules_input = open("7.txt").read().strip().split('\n')
+    rules_input = open('7.txt').read().strip().split('\n')
     rules = {}
     for rule in rules_input:
         subrules = rule.split(',')
@@ -114,7 +114,7 @@ def day7():
     print(getNrContainedBags('shiny gold'))
 
 def day8():
-    instructions = open("8.txt").read().strip().split('\n')
+    instructions = open('8.txt').read().strip().split('\n')
     def runInstruction(acc, pc, seen): return acc if pc in seen else (runInstruction(acc + (int(instructions[pc][3:]) if instructions[pc][:3] == 'acc' else 0), pc + (int(instructions[pc][3:]) if instructions[pc][:3] == 'jmp' else 1), seen + [pc]))
     print(runInstruction(0, 0, []))
     
@@ -176,13 +176,13 @@ def day10():
 
 def day11():
     originalSeats = [list(x) for x in open('11.txt').read().strip().split('\n')]
-    rows = len(originalSeats)
-    cols = len(originalSeats[0])
+    rows, cols = len(originalSeats), len(originalSeats[0])
+    directions = list(itertools.product(range(-1, 2), range(-1, 2)))
+    directions.remove((0,0))
 
     # Part 1
     def neighboursOccupied(row, col, seats):
-        neighbours = set(itertools.chain(itertools.product([row - 1, row + 1], range(col - 1, col + 2)), itertools.product(range(row - 1, row + 2), [col - 1, col + 1])))
-        return len(list(filter(lambda x: x == '#', [seats[x][y] if x >= 0 and y >= 0 and x < rows and y < cols else 'O' for x, y in neighbours])))
+        return len(list(filter(lambda x: x == '#', [seats[x][y] if  0 <= x < rows and 0 <= y < cols else 'O' for x, y in [(row + x, col + y) for x, y in directions]])))
 
     seatscopy = []
     seats = deepcopy(originalSeats)
@@ -195,11 +195,9 @@ def day11():
     # Part 2
     def neighboursOccupied2(row, col, seats):
         res = 0
-        directions = itertools.product(range(-1, 2), range(-1, 2))
         for dirX, dirY in directions:
             x, y = dirX, dirY
-            if x == 0 and y == 0: continue
-            while row + x >= 0 and col + y >= 0 and row + x < rows and col + y < cols:
+            while 0 <= row + x < rows and 0 <= col + y < cols:
                 if seats[row + x][col + y] == '#':
                     res += 1
                     break
