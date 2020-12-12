@@ -4,6 +4,7 @@ import sys
 import re
 import functools
 import itertools
+import numpy as np
 from pprint import pprint
 from copy import deepcopy
 
@@ -228,6 +229,42 @@ def day11():
 
     print(len(list(filter(lambda x: x == '#', [seats[r][c] for r, c in itertools.product(range(rows), range(cols))]))))
 
-day11()
+def day12():
+    N = open('12.txt').read().strip().split('\n')
+    gradM = {0: np.array([0,1]), 90: np.array([1,0]), 180: np.array([0,-1]), 270: np.array([-1,0]), }
+
+    # Part 1
+    pos = np.array([0, 0])
+    dire = 90 # facing east
+
+    for n in N:
+        action = n[0]
+        if action == 'N': pos += gradM[0]*int(n[1:])
+        if action == 'E': pos += gradM[90]*int(n[1:])
+        if action == 'S': pos += gradM[180]*int(n[1:])
+        if action == 'W': pos += gradM[270]*int(n[1:])
+        if action == 'R': dire = (dire + int(n[1:])) % 360
+        if action == 'L': dire = (dire - int(n[1:])) % 360
+        if action == 'F': pos += gradM[dire]*int(n[1:])
+
+    print(abs(pos[0]) + abs(pos[1]))
+
+    # Part 2
+    transition = {0: np.array([[1,0], [0,1]]), 90: np.array([[0,1], [-1,0]]), 180: np.array([[-1,0], [0,-1]]), 270: np.array([[0,-1], [1,0]])}
+    pos = np.array([0, 0])
+    wayPos = np.array([10,1])
+
+    for n in N:
+        action = n[0]
+        if action == 'N': wayPos += gradM[0]*int(n[1:])
+        if action == 'E': wayPos += gradM[90]*int(n[1:])
+        if action == 'S': wayPos += gradM[180]*int(n[1:])
+        if action == 'W': wayPos += gradM[270]*int(n[1:])
+        if action == 'R': wayPos = np.matmul(transition[int(n[1:])], wayPos)
+        if action == 'L': wayPos = np.matmul(transition[360 - int(n[1:])], wayPos)
+        if action == 'F': pos += wayPos*int(n[1:])
+
+    print(abs(pos[0]) + abs(pos[1]))
 
 
+day12()
