@@ -3,6 +3,7 @@
 import sys
 import re
 import functools
+import operator
 import itertools
 import numpy as np
 from pprint import pprint
@@ -266,5 +267,43 @@ def day12():
 
     print(abs(pos[0]) + abs(pos[1]))
 
+def day13():
+    inpu = open('13.txt').read().split('\n')
+    arivalTime = int(inpu[0])
+    busses = [i for i in inpu[1].split(',')]
 
-day12()
+    # Part 1
+    wait = arivalTime
+    bus = 0
+    for b in busses:
+        if b == 'x':
+            continue
+        b = int(b)
+        waitTime = b - (arivalTime % b)
+        if  waitTime < wait:
+            wait = waitTime
+            bus = b
+    print(bus*wait)
+
+    # Part 2
+    # Note: the bus times are only prime numbers so they can easily multiplied to get the kgV
+    # pre, inc = solve (i) finds the correct departure time for the first i busses.
+    # For exactly all times 'pre + j*inc' the first i busses arrive at the correct time
+    # To add the next bus j can be iterated until a time is found, where bus i+1 leaves at the correct time
+    # As inc is large the number of iterations is minimal
+    # The new pre is then pre + j*inc and the new increment is then kgV of (inc, busTime)
+    def solve(i):
+        if i == 0:
+            return int(busses[i]), int(busses[i])
+        if busses[i] == 'x':
+            return solve(i - 1)
+        departure, inc = solve(i - 1)
+        b = int(busses[i])
+        while (departure + i) % b != 0:
+            print(departure)
+            departure += inc
+        return departure, inc * b # cause of the prime numbers inc * b is correct
+
+    print(solve(len(busses) - 1)[0])
+
+day13()
