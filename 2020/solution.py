@@ -306,4 +306,55 @@ def day13():
 
     print(solve(len(busses) - 1)[0])
 
-day13()
+def day14():
+    P = [x.split(' ') for x in open('14.txt').read().strip().split('\n')]
+
+    # Part 1
+    memory = {}
+    for p in P:
+        if p[0] == 'mask':
+            mask = p[2]
+            continue
+        address = p[0][4:-1]
+        v = int(p[2])
+        v_res = 0
+        for i, x in enumerate(reversed(mask)):
+            if x == '1': v_res += 2 ** i
+            elif x == 'X': v_res += 0 if (v >> i) % 2 == 0 else 2 ** i
+        memory[address] = v_res
+    print(sum(memory.values()))
+
+    # Part 2
+    memory = {}
+    for p in P:
+        if p[0] == 'mask':
+            mask = p[2]
+            continue
+        address = int(p[0][4:-1])
+        a_res = ''
+        for i, x in enumerate(reversed(mask)):
+            if x == '0': a_res += str((address >> i) % 2)
+            else: a_res += x
+
+        addresses_x1 = [a_res]
+        while addresses_x1[0].count('X') > 0:
+            addresses_x2 = []
+            for a in addresses_x1:
+                addresses_x2.append(a.replace('X', '0', 1))
+                addresses_x2.append(a.replace('X', '1', 1))
+            addresses_x1 = addresses_x2
+
+        for a in addresses_x1:
+            memory[a] = int(p[2])
+    print(sum(memory.values()))
+
+def day15():
+    N = [int(x) for x in open('15.txt').read().split(',')]
+    last = {} # map value to second last and last time it was spoken
+    for i in range(2020):
+#    for i in range(30000000):
+        spoken = N[i] if i < len(N) else last[spoken][1] - last[spoken][0] if last[spoken][0] != None else 0
+        last[spoken] = last[spoken][1] if spoken in last else None, i
+    print(spoken)
+
+day15()
