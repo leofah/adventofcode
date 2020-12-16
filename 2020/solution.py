@@ -8,6 +8,7 @@ import itertools
 import numpy as np
 from pprint import pprint
 from copy import deepcopy
+from collections import defaultdict
 
 def day1():
     numbers = list(map(lambda x: int(x), open('1.txt').read().strip().split('\n')))
@@ -357,4 +358,62 @@ def day15():
         last[spoken] = last[spoken][1] if spoken in last else None, i
     print(spoken)
 
-day15()
+def day16():
+    I = open('16.txt').read().split('\n\n')
+    rules = [x.split(': ') for x in I[0].strip().split('\n')]
+    rules = list(map(lambda x: [x[0], [int(x[1].split('or')[a].split('-')[b]) for a, b in itertools.product(range(2), repeat=2)]], rules))
+    your_ticket = [int(x) for x in I[1].split(':')[1].strip().split(',')]
+    nearby_tickets = [list(map(int, x.split(','))) for x in I[2].split(':')[1].strip().split('\n')]
+
+    # Part 1
+    scan_errors = []
+    incorrect_tickets = []
+    for t in nearby_tickets:
+        for val in t:
+            ok = False
+            for r in rules:
+                if r[1][0] <= val <= r[1][1] or r[1][2] <= val <= r[1][3]:
+                    ok = True
+                    break
+            if not ok:
+                scan_errors.append(val)
+                incorrect_tickets.append(t)
+
+    print(sum(scan_errors))
+
+    # Part 2
+    correct_tickets = [t for t in nearby_tickets if t not in incorrect_tickets]
+    # find which rules could fit on which position, there can be mulitple valid rules
+    r_for_pos = defaultdict(list)
+    for r in rules:
+        for i in range(len(your_ticket)):
+            # check if rule applies for ticket value i
+            ok = True
+            for t in correct_tickets:
+                val = t[i]
+                if r[1][0] <= val <= r[1][1] or r[1][2] <= val <= r[1][3]:
+                    continue
+                ok = False
+                break
+            if ok:
+                r_for_pos[i].append(r[0])
+
+    # find the exact rule for each position. If a position only allows one rule, this is the one.
+    # Remove this rule from all other position and repeat
+    r_to_i = {}
+    while r_for_pos:
+        x = [(i, r_for_pos[i][0]) for i in r_for_pos if len(r_for_pos[i]) == 1]
+        i, r = x[0]
+        r_to_i[r] = i
+        r_for_pos.pop(i)
+        for j in r_for_pos:
+            if r in r_for_pos[j]:
+                r_for_pos[j].remove(r)
+
+    result = [your_ticket[i] for i in [r_to_i[x] for x in r_to_i if x.startswith('departure')]]
+    ans = 1
+    for res in result:
+        ans *= res
+    print(ans)
+
+day16()
