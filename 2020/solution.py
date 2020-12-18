@@ -416,4 +416,39 @@ def day16():
         ans *= res
     print(ans)
 
-day16()
+def day18():
+    E = [[l for l in list(x) if l != ' '] for x in open('18.txt').read().strip().split('\n')]
+
+    # Part 1
+    def evaluate(e):
+        if len(e) == 1: return int(e[0])
+        if '(' in e:
+            for i, v in enumerate(e):
+                if v == '(': startpar = i
+                elif v == ')':
+                    endpar = i
+                    p_result = evaluate(e[startpar + 1:endpar])
+                    break
+            return evaluate(e[:startpar] + [p_result] + e[endpar + 1:])
+        if e[1] == '+': return evaluate([int(e[0]) + int(e[2])] + e[3:])
+        if e[1] == '*': return evaluate([int(e[0]) * int(e[2])] + e[3:])
+    print(sum([evaluate(e) for e in E]))
+
+    # Part 2
+    def evaluate2(e):
+        if len(e) == 1: return int(e[0])
+        if '(' in e:
+            for i, v in enumerate(e):
+                if v == '(': startpar = i
+                elif v == ')':
+                    endpar = i
+                    p_result = evaluate2(e[startpar + 1:endpar])
+                    break
+            return evaluate2(e[:startpar] + [p_result] + e[endpar + 1:])
+        if '+' in e:
+            i = e.index('+')
+            return evaluate2(e[:i - 1] + [int(e[i - 1]) + int(e[i + 1])] + e[i + 2:])
+        if e[1] == '*': return evaluate2([int(e[0]) * int(e[2])] + e[3:])
+    print(sum([evaluate2(e) for e in E]))
+
+day18()
