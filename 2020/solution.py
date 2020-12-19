@@ -6,6 +6,7 @@ import functools
 import operator
 import itertools
 import numpy as np
+import functools
 from pprint import pprint
 from copy import deepcopy
 from collections import defaultdict
@@ -451,4 +452,79 @@ def day18():
         if e[1] == '*': return evaluate2([int(e[0]) * int(e[2])] + e[3:])
     print(sum([evaluate2(e) for e in E]))
 
-day18()
+def day19():
+    inputFile = "19.txt"
+    G_original = {x.split(':')[0]: [y.strip().split(' ') for y in x.split(':')[1].split('|')] for x in open(inputFile).read().split('\n\n')[0].split('\n')}
+    I = ([x for x in open(inputFile).read().split('\n\n')[1].strip().split('\n')])
+
+    # Part 1
+    # Goal is to match a context free grammar without loops (so the language is acutally finite and thus regular)
+    # First naive approach find all words in the language
+    # if rule = '0' the whole language will be the result
+    def matchingStrings(rule):
+        if (rule == '"a"'): return {'a'}
+        if (rule == '"b"'): return {'b'}
+
+        res = set()
+        for r in G_original[rule]:
+            submatches = [matchingStrings(x) for x in r]
+            if len(submatches) == 1:
+                res.update(submatches[0])
+                continue
+            res.update({''.join(y) for y in itertools.product(*submatches)})
+        return res
+
+    # Part 2
+    # solution of Part 1 will not work, as the language is now infinite
+    # Use CYK algorithm which is in O(n^3) where n is the length of the word to test
+    # The cache improves the runtime hugely
+    # However the Grammar needs to be in Chomsky Normal Form (CNF)
+    G = deepcopy(G_original)
+    G['8'] = [['42'], ['42', '8']]
+    G['11'] = [['42', '31'], ['42', '11', '31']] # normalize to CNF
+    G['11'] = [['42', '31'], ['11_0', '31']]
+    G['11_0'] = [['42', '11']]
+
+    @functools.cache
+    def CYK(word): # G is not an argument, as it cannot be hashed for the cache
+        print(word)
+        if len(word) < 1:
+            return set()
+        if len(word) == 1:
+            return {x for x in G if ['"' + word + '"'] in G[x] }
+        result = set()
+        for i in range(1, len(word)):
+            A = CYK(word[:i])
+            B = CYK(word[i:])
+            rhs = list(itertools.product(A, B))
+            for p in G:
+                for r in rhs:
+                    if list(r) in G[p]:
+                        result.add(p)
+        return result
+
+    def toCNF(grammar):
+        res = {}
+        for p in grammar:
+            res[p] = []
+            for r in grammar[p]:
+                if len(r) == 2:
+                    res[p].append(r)
+                elif len(r) == 1:
+                    if r[0] == '"a"' or r[0] == '"b"':
+                        res[p].append(r)
+                    else:
+                        # assume grammar[r[0]] has len 2
+                        res[p] += grammar[r[0]]
+                else: # len > 2
+                    assert(False)
+        return res
+
+    G = toCNF(G)
+    cor = list(filter(lambda x: '0' in CYK(x), (w for w in I)))
+    L = matchingStrings('0')
+
+    print("Part1:", len([x for x in I if x in L]))
+    print("Part2:", len(cor))
+
+day19()
