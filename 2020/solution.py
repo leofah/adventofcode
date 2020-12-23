@@ -527,4 +527,81 @@ def day19():
     print("Part1:", len([x for x in I if x in L]))
     print("Part2:", len(cor))
 
-day19()
+def day23():
+    LABELS = [int(x) for x in open("23.txt").read().strip()]
+
+    # Use a linked list to handle the circle. 
+    # Then only the reference needs to be update on each step
+    # and not the memory copied
+    class list_item:
+        def __init__(self, value, next_item):
+            self.value = value
+            self.next_item = next_item
+
+        def __str__(self):
+            return str(list(self))
+
+        def __iter__(self):
+            class iter:
+                def __init__(self, start):
+                    self.start = start
+                    self.current = start
+                    self.counter = 0
+
+                def __next__(self):
+                    if (self.counter > 0 and self.current == self.start):
+                        raise StopIteration
+                    value = self.current.value
+                    self.counter += 1
+                    self.current = self.current.next_item
+                    return value
+            return iter(self)
+
+    def shuffle(circle, times):
+        l = len(circle)
+
+        # create the linked list
+        items = {}
+        last_item = None
+        for cup in reversed(circle):
+            last_item = list_item(cup, last_item)
+            items[cup] = last_item
+
+        # close the loop from the last to the first item
+        items[circle[l - 1]].next_item = items[circle[0]]
+        items = tuple(items[i + 1] for i in range(len(circle)))
+
+        # next step
+        cur = items[circle[0] - 1]
+        for i in range(times):
+            if i % 10000 == 0:
+                print(i)
+            pick_it = cur
+            pick_values = []
+            for i in range(3):
+                pick_it = pick_it.next_item
+                pick_values.append(pick_it.value)
+            after_value = (cur.value - 2) % l + 1
+            while after_value in pick_values: after_value = (after_value - 2) % l + 1
+            after_item = items[after_value - 1]
+            # bend the new next pointers
+            start_pick = cur.next_item
+            cur.next_item = pick_it.next_item
+            pick_it.next_item = after_item.next_item
+            after_item.next_item = start_pick
+            cur = cur.next_item
+
+        return items
+
+    # Part 1
+    items = shuffle(LABELS, 100)
+    res = ''.join([str(x) for x in items[0]])
+    print(res[1:])
+
+    # Part 2
+    items = shuffle(LABELS + [x for x in range(10,10 ** 6 + 1)], 10 ** 7)
+    n = items[0].next_item
+    nn = n.next_item
+    print(n.value * nn.value)
+
+day23()
