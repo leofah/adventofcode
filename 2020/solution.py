@@ -604,4 +604,34 @@ def day23():
     nn = n.next_item
     print(n.value * nn.value)
 
-day23()
+def day24():
+    INPUT = [[x[i] if i == 0 or x[i-1] not in ['s', 'n'] else x[i - 1] + x[i] for i in range(len(x)) if x[i] not in ['s', 'n']] for x in open("24.txt").read().strip().split('\n')]
+    directions = {'e': (1, 0), 'ne': (0, 1), 'nw': (-1 ,1), 'w': (-1, 0), 'sw': (0, -1), 'se': (1, -1)}
+
+    # Part 1
+    grid = defaultdict(lambda: 0)
+    for tile in INPUT:
+        x, y= (0,0)
+        for d in tile:
+            x += directions[d][0]
+            y += directions[d][1]
+
+        grid[x, y] = 1 - grid[x, y]
+
+    print(sum(grid.values()))
+
+    # Part 2
+    for i in range(100):
+        maxX = max(abs(x) for (x, y) in grid.keys() if grid[x, y] > 0) + 2
+        maxY = max(abs(y) for (x, y) in grid.keys() if grid[x, y] > 0) + 2
+
+        new_grid = defaultdict(lambda: 0)
+        for x, y in itertools.product(range(-maxX, maxX), range(-maxY, maxY)):
+            count = sum(grid[x + dx, y + dy] for dx, dy in directions.values())
+            new_grid[x, y] = 0 if grid[x, y] == 1 and (count == 0 or count > 2) else 1 if grid[x, y] == 0 and count == 2 else grid[x, y]
+
+        grid = new_grid
+
+    print(sum(grid.values()))
+
+day24()
